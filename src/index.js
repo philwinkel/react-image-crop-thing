@@ -60,7 +60,10 @@ export default class ReactImageCropThing extends Component {
           width: this.state.cropAreaWidth,
           height: this.state.cropAreaHeight
         }}>
-          <div className={styles.cropImageMasked}>
+          <div className={styles.cropImageMasked} style={{
+            width: this.state.cropAreaWidth,
+            height: this.state.cropAreaHeight
+          }}>
             <img src={this.state.src2}
               draggable='false'
               onMouseDown={(e) => this.onMouseDown(e)}
