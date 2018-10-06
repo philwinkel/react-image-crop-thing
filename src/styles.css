@@ -1,8 +1,57 @@
-/* add css styles here (optional) */
+.reactImageCropThing {
+  width: 100%;
+  height: 500px; /* support changing this */
+  padding: 40px;
+  background: darkgray;
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+  text-align: center;
+}
 
-.test {
-  display: inline-block;
-  margin: 2em auto;
-  border: 2px solid #000;
-  font-size: 2em;
+.fillWidth {
+  min-width: 100%;
+  height: auto;
+}
+
+.fillHeight {
+  min-height: 100%;
+  height: auto;
+}
+
+.origImg {
+  display: none;
+}
+
+.controls {
+  z-index: 1;
+  margin: 0 auto;
+  width: 320px;
+}
+
+.cropArea {
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 1px solid red;
+}
+
+.cropImageMasked {
+  margin: 0 auto;
+  overflow: hidden;
+  box-shadow: 0 0 2px rgba(255,255,255, .5);
+  position: relative;
+  text-align: center;
+}
+
+.cropImageTransparent {
+  text-align: center;
+  opacity: 0.3;
+}
+
+.cropImg {
+  /* manipulate height, left, top, and width of this when zooming */
+  position: absolute;
+  cursor: move;
 }
