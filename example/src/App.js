@@ -44,7 +44,7 @@ export default class App extends Component {
         </div>
         <div>
           <label htmlFor='file'>Upload image:</label>
-          <input type='file' id='file' onChange={(e) => this.onFileChange(e)} />
+          <input type='file' id='file' onChange={(e) => this.onFileChange(e)} accept='image/*' />
         </div>
       </div>
     )

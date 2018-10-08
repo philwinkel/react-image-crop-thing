@@ -41,7 +41,7 @@ export default class ReactImageCropThing extends Component {
     return (
       <div className={styles.reactImageCropThing}
         ref={this.root}
-        onDragOver={(e) => e.preventDefault()}
+        onDragOver={(e) => this.onDragOver(e)}
         onMouseLeave={(e) => this.onMouseLeave(e)}
         onDrop={(e) => this.onDrop(e)}>
         {/* original image (hidden) */}
@@ -117,7 +117,6 @@ export default class ReactImageCropThing extends Component {
 
     if (this.props.src !== prevProps.src) {
       console.log('src changed to ' + this.props.src)
-      this.scaleCropAreaToFit()
       this.scaleImageToFitCropArea()
       this.zoomChanged(1)
     }
@@ -278,7 +277,14 @@ export default class ReactImageCropThing extends Component {
     })
   }
 
+  onDragOver(e) {
+    console.log('onDragOver')
+    e.preventDefault()
+  }
+
   onDrop(e) {
+    console.log('onDrop')
+
     // default behavior of drop in some browsers is to navigate to data url upon drop... dont do that
     e.preventDefault()
 
@@ -292,12 +298,12 @@ export default class ReactImageCropThing extends Component {
     }
 
     var file = e.dataTransfer.items[0].getAsFile()
+    console.log('file.type ' + file.type)
     let c = this
     let fr = new FileReader()
     fr.onload = function() {
-      c.setState({
-        src: fr.result
-      })
+      // save in origImg - it's onload event will cause everything else to update.
+      c.origImg.current.src = fr.result
     }
     fr.readAsDataURL(file)
   }
@@ -394,14 +400,20 @@ export default class ReactImageCropThing extends Component {
 
     // check if image fills entire crop area height
     if (height < this.state.cropAreaHeight) {
-      let factor = this.state.cropAreaHeight / height;
-      let oldHeight = height;
+      let factor = this.state.cropAreaHeight / height
+      let oldHeight = height
       height *= factor
       width = width / oldHeight * height
       if (top > 0) {
         top = 0
       }
     }
+
+    // apply zoom
+    width *= this.props.zoom
+    height *= this.props.zoom
+    top *= this.props.zoom
+    left *= this.props.zoom
 
     this.setState({
       width: width,
@@ -412,7 +424,7 @@ export default class ReactImageCropThing extends Component {
   }
 
   zoomChanged(prevZoom) {
-    console.log('zoomChanged')
+    console.log('zoomChanged from prevZoom to ' + this.props.zoom)
 
     let prevWidth = this.state.width
     let prevHeight = this.state.height
