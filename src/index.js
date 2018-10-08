@@ -5,7 +5,7 @@ import styles from './styles.css'
 export default class ReactImageCropThing extends Component {
   static propTypes = {
     src: PropTypes.string,
-    zoom: PropTypes.number,
+    zoom: PropTypes.string,
     cropAreaWidthRatio: PropTypes.number,
     cropAreaHeightRatio: PropTypes.number
   }
@@ -22,9 +22,6 @@ export default class ReactImageCropThing extends Component {
       left: 0,
       width: 0,
       height: 0,
-
-      rootWidth: 0,
-      rootHeight: 0,
 
       cropAreaClassName: '',
       cropAreaWidth: 0,
@@ -98,7 +95,7 @@ export default class ReactImageCropThing extends Component {
 
   componentDidMount() {
     window.addEventListener('resize', this.onResize.bind(this))
-    // this.resizeCropArea()
+    // this.scaleCropAreaToFit()
   }
 
   componentWillUnmount() {
@@ -107,12 +104,26 @@ export default class ReactImageCropThing extends Component {
 
   componentDidUpdate(prevProps) {
     if (this.state.cropAreaWidth === 0 || this.state.cropAreaHeight === 0) {
-      this.resizeCropArea()
+      // do this once when it starts...
+      this.scaleCropAreaToFit()
     }
 
     if (this.props.cropAreaWidthRatio !== prevProps.cropAreaWidthRatio ||
       this.props.cropAreaHeightRatio !== prevProps.cropAreaHeightRatio) {
-      this.resizeCropArea()
+      this.scaleCropAreaToFit()
+      this.scaleImageToFitCropArea()
+      this.zoomChanged(1)
+    }
+
+    if (this.props.src !== prevProps.src) {
+      console.log('src changed to ' + this.props.src)
+      this.scaleCropAreaToFit()
+      this.scaleImageToFitCropArea()
+      this.zoomChanged(1)
+    }
+
+    if (this.props.zoom !== prevProps.zoom) {
+      this.zoomChanged(prevProps.zoom)
     }
   }
 
@@ -144,7 +155,14 @@ export default class ReactImageCropThing extends Component {
     console.log('origImgOnLoadStart')
   }
 
-  resizeCropArea() {
+  origImgOnLoad(e) {
+    this.setState({
+      src2: this.origImg.current.src
+    })
+    this.scaleImageToFitCropArea()
+  }
+
+  scaleCropAreaToFit() {
     if (!this.root.current) {
       return
     }
@@ -153,7 +171,7 @@ export default class ReactImageCropThing extends Component {
     let heightAvailable = this.getElementHeightMinusPadding(this.root.current)
 
     console.log(`root width ${this.root.current.clientWidth} , height ${this.root.current.clientHeight}`)
-    console.log(`root available width ${widthAvailable} , height ${heightAvailable}`)
+    console.log(`scaling cropArea to fit available width ${widthAvailable} , height ${heightAvailable}`)
 
     let cropAreaWidth = 0
     let cropAreaHeight = 0
@@ -196,95 +214,13 @@ export default class ReactImageCropThing extends Component {
     this.setState({
       cropAreaWidth: cropAreaWidth,
       cropAreaHeight: cropAreaHeight
+    }, () => {
+      this.scaleImageToFitCropArea()
     })
   }
 
   onResize(e) {
-    this.resizeCropArea()
-  }
-
-  origImgOnLoad(e) {
-    // TODO: refactor out into a method to initialize the image size
-    let imgWidth = this.origImg.current.width
-    let imgHeight = this.origImg.current.height
-    console.log(`origImgOnLoad width ${imgWidth} , height ${imgHeight}`)
-
-    let width = 0
-    let height = 0
-    let top = 0
-    let left = 0
-
-    // center image horizontally
-    // left = -(width - this.state.cropAreaWidth) / 2
-
-    // center vertically
-    // top = -(height - this.state.cropAreaHeight) / 2
-
-    if (imgWidth === imgHeight) {
-      // image is a square
-      if (this.state.cropAreaWidth === this.state.cropAreaHeight) {
-        // .. and crop area is square - fit image to crop area
-        width = this.state.cropAreaWidth
-        height = this.state.cropAreaHeight
-      } else if (this.state.cropAreaWidth > this.state.cropAreaHeight) {
-        // image is square, crop area is landscape - fit image to crop area width, center vertically
-        width = this.state.cropAreaWidth
-        height = imgHeight * (width / imgWidth)
-        top = -(height - this.state.cropAreaHeight) / 2
-      } else {
-        // image is square, crop area is portrait - fit image to crop area height, center horizontally
-        height = this.state.cropAreaHeight
-        width = imgWidth * (height / imgHeight)
-        left = -(width - this.state.cropAreaWidth) / 2
-      }
-    } else if (imgWidth > imgHeight) {
-      // image is wider than tall
-      if (this.state.cropAreaWidth === this.state.cropAreaHeight) {
-        // .. and crop area is square - fit image height to crop area height. center horizontally
-        height = this.state.cropAreaHeight
-        width = imgWidth * (height / imgHeight)
-        left = -(width - this.state.cropAreaWidth) / 2
-      } else if (this.state.cropAreaWidth > this.state.cropAreaHeight) {
-        // ... and crop area is landscape - fit image to crop area width, center horizontally and vertically
-        width = this.state.cropAreaWidth
-        height = imgHeight * (width / imgWidth)
-        top = -(height - this.state.cropAreaHeight) / 2
-        left = -(width - this.state.cropAreaWidth) / 2
-      } else {
-        // ... and crop area is portrait - fit image to crop area height, center horizontally
-        height = this.state.cropAreaHeight
-        width = imgWidth * (height / imgHeight)
-        left = -(width - this.state.cropAreaWidth) / 2
-      }
-    } else {
-      // image is taller than wide
-      if (this.state.cropAreaWidth === this.state.cropAreaHeight) {
-        // ... and crop area is square - fit image to width, center vertically
-        width = this.state.cropAreaWidth
-        height = imgHeight * (width / imgWidth)
-        top = -(height - this.state.cropAreaHeight) / 2
-      } else if (this.state.cropAreaWidth > this.state.cropAreaHeight) {
-        // ... and crop area is landscape -
-        width = this.state.cropAreaWidth
-        height = imgHeight * (width / imgWidth)
-        top = -(height - this.state.cropAreaHeight) / 2
-      } else {
-        height = this.state.cropAreaHeight
-        width = imgWidth * (height / imgHeight)
-        top = -(height - this.state.cropAreaHeight) / 2
-        left = -(width - this.state.cropAreaWidth) / 2
-      }
-    }
-
-    this.setState({
-      src2: this.origImg.current.src,
-      width: width,
-      height: height,
-      top: top,
-      left: left,
-      rootWidth: this.root.current.clientWidth,
-      rootHeight: this.root.current.clientHeight
-    })
+    this.scaleCropAreaToFit()
   }
 
   origImgOnProgress(e) {
@@ -370,5 +306,129 @@ export default class ReactImageCropThing extends Component {
     // this.setState({
     //   dragging: false
     // })
+  }
+
+  scaleImageToFitCropArea() {
+    let imgWidth = this.origImg.current.width
+    let imgHeight = this.origImg.current.height
+    console.log(`origImgOnLoad width ${imgWidth} , height ${imgHeight}`)
+
+    let width = 0
+    let height = 0
+    let top = 0
+    let left = 0
+
+    // center image horizontally
+    // left = -(width - this.state.cropAreaWidth) / 2
+
+    // center vertically
+    // top = -(height - this.state.cropAreaHeight) / 2
+
+    if (imgWidth === imgHeight) {
+      // image is a square
+      if (this.state.cropAreaWidth === this.state.cropAreaHeight) {
+        // .. and crop area is square - fit image to crop area
+        width = this.state.cropAreaWidth
+        height = this.state.cropAreaHeight
+      } else if (this.state.cropAreaWidth > this.state.cropAreaHeight) {
+        // image is square, crop area is landscape - fit image to crop area width, center vertically
+        width = this.state.cropAreaWidth
+        height = imgHeight * (width / imgWidth)
+        top = -(height - this.state.cropAreaHeight) / 2
+      } else {
+        // image is square, crop area is portrait - fit image to crop area height, center horizontally
+        height = this.state.cropAreaHeight
+        width = imgWidth * (height / imgHeight)
+        left = -(width - this.state.cropAreaWidth) / 2
+      }
+    } else if (imgWidth > imgHeight) {
+      // image is wider than tall
+      if (this.state.cropAreaWidth === this.state.cropAreaHeight) {
+        // .. and crop area is square - fit image height to crop area height. center horizontally
+        height = this.state.cropAreaHeight
+        width = imgWidth * (height / imgHeight)
+        left = -(width - this.state.cropAreaWidth) / 2
+      } else if (this.state.cropAreaWidth > this.state.cropAreaHeight) {
+        // ... and crop area is landscape - fit image to crop area width, center horizontally and vertically
+        width = this.state.cropAreaWidth
+        height = imgHeight * (width / imgWidth)
+        top = -(height - this.state.cropAreaHeight) / 2
+        left = -(width - this.state.cropAreaWidth) / 2
+      } else {
+        // ... and crop area is portrait - fit image to crop area height, center horizontally
+        height = this.state.cropAreaHeight
+        width = imgWidth * (height / imgHeight)
+        left = -(width - this.state.cropAreaWidth) / 2
+      }
+    } else {
+      // image is taller than wide
+      if (this.state.cropAreaWidth === this.state.cropAreaHeight) {
+        // ... and crop area is square - fit image to width, center vertically
+        width = this.state.cropAreaWidth
+        height = imgHeight * (width / imgWidth)
+        top = -(height - this.state.cropAreaHeight) / 2
+      } else if (this.state.cropAreaWidth > this.state.cropAreaHeight) {
+        // ... and crop area is landscape -
+        width = this.state.cropAreaWidth
+        height = imgHeight * (width / imgWidth)
+        top = -(height - this.state.cropAreaHeight) / 2
+      } else {
+        height = this.state.cropAreaHeight
+        width = imgWidth * (height / imgHeight)
+        top = -(height - this.state.cropAreaHeight) / 2
+        left = -(width - this.state.cropAreaWidth) / 2
+      }
+    }
+
+    // check if image fills entire crop area
+    if (width < this.state.cropAreaWidth) {
+      // scale image up to fit width of crop area
+      let factor = this.state.cropAreaWidth / width
+      let oldWidth = width
+      width *= factor
+      height = height / oldWidth * width
+      if (left > 0) {
+        left = 0
+      }
+    }
+
+    // check if image fills entire crop area height
+    if (height < this.state.cropAreaHeight) {
+      let factor = this.state.cropAreaHeight / height;
+      let oldHeight = height;
+      height *= factor
+      width = width / oldHeight * height
+      if (top > 0) {
+        top = 0
+      }
+    }
+
+    this.setState({
+      width: width,
+      height: height,
+      top: top,
+      left: left
+    })
+  }
+
+  zoomChanged(prevZoom) {
+    console.log('zoomChanged')
+
+    let prevWidth = this.state.width
+    let prevHeight = this.state.height
+    let prevTop = this.state.top
+    let prevLeft = this.state.left
+
+    let newWidth = prevWidth * (this.props.zoom / prevZoom)
+    let newHeight = prevHeight * (this.props.zoom / prevZoom)
+    let newTop = prevTop * (this.props.zoom / prevZoom)
+    let newLeft = prevLeft * (this.props.zoom / prevZoom)
+
+    this.setState({
+      width: newWidth,
+      height: newHeight,
+      top: newTop,
+      left: newLeft
+    })
   }
 }

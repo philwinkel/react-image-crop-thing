@@ -28,7 +28,7 @@ export default class App extends Component {
 
         <div>
           <label htmlFor='zoom'>Zoom</label>
-          <input type='range' id='zoom' min='1' max='5' step='0.1' value={this.state.zoom} onChange={(e) => this.setZoom(e)} />
+          <input type='range' id='zoom' min='1' max='10' step='0.1' value={this.state.zoom} onChange={(e) => this.setZoom(e)} />
         </div>
         <div>
           <span>Crop Size:</span>
