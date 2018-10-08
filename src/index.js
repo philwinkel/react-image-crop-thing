@@ -10,7 +10,8 @@ export default class ReactImageCropThing extends Component {
     cropAreaHeightRatio: PropTypes.number,
     onCropChange: PropTypes.func,
     showCircleMask: PropTypes.bool,
-    maskOpacity: PropTypes.number
+    maskOpacity: PropTypes.number,
+    maskColor: PropTypes.string
   }
 
   constructor() {
@@ -43,10 +44,8 @@ export default class ReactImageCropThing extends Component {
 
   render() {
     let cropAreaBorderRadius = '0'
-    let cropAreaBackground = 'transparent'
     if (this.props.showCircleMask) {
       cropAreaBorderRadius = '100%'
-      cropAreaBackground = `radial-gradient(transparent ${this.state.cropAreaWidth / 2}px, rgba(0,0,0,${this.props.maskOpacity}) ${this.state.cropAreaWidth / 2}px)`
     }
 
     return (
@@ -54,7 +53,10 @@ export default class ReactImageCropThing extends Component {
         ref={this.root}
         onDragOver={(e) => this.onDragOver(e)}
         onMouseLeave={(e) => this.onMouseLeave(e)}
-        onDrop={(e) => this.onDrop(e)}>
+        onDrop={(e) => this.onDrop(e)}
+        style={{
+          background: this.props.maskColor
+        }}>
         {/* original image (hidden) */}
         <img className={styles.displayNone}
           ref={this.origImg}
@@ -85,8 +87,7 @@ export default class ReactImageCropThing extends Component {
                 width: this.state.width,
                 height: this.state.height,
                 top: this.state.top,
-                left: this.state.left,
-                background: cropAreaBackground
+                left: this.state.left
               }} />
           </div>
           <div className={styles.cropImageTransparent} style={{
@@ -476,19 +477,25 @@ export default class ReactImageCropThing extends Component {
     this.canvas.current.width = cropWidth
     this.canvas.current.height = cropHeight
 
-    let ctx = this.canvas.current.getContext('2d')
-
-    ctx.drawImage(this.origImg.current, cropOffsetX, cropOffsetY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight)
-
-    let cropImg = ''
-    try {
-      cropImg = this.canvas.current.toDataURL('image/jpeg')
-    } catch (err) {
-      console.log(err)
-    }
-
     let cropData = {
-      src: cropImg
+      cropOffsetX: cropOffsetX,
+      cropOffsetY: cropOffsetY,
+      cropWidth: cropWidth,
+      cropHeight: cropHeight,
+      cropImageBase64: () => {
+        let ctx = this.canvas.current.getContext('2d')
+
+        ctx.drawImage(this.origImg.current, cropOffsetX, cropOffsetY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight)
+
+        let cropImg = ''
+        try {
+          cropImg = this.canvas.current.toDataURL('image/jpeg')
+        } catch (err) {
+          console.log(err)
+        }
+
+        return cropImg
+      }
     }
     this.onCropChange(cropData)
   }
