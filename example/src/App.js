@@ -11,7 +11,8 @@ export default class App extends Component {
       zoom: 1,
       cropAreaWidthRatio: 200,
       cropAreaHeightRatio: 200,
-      containerClassName: 'square'
+      containerClassName: 'square',
+      croppedImage: ''
     }
   }
 
@@ -23,12 +24,12 @@ export default class App extends Component {
           zoom={this.state.zoom}
           cropAreaWidthRatio={this.state.cropAreaWidthRatio}
           cropAreaHeightRatio={this.state.cropAreaHeightRatio}
-          // TODO: square, circle, specific size
+          onCropChange={(cropData) => this.onCropDataChange(cropData)}
         />
 
         <div>
           <label htmlFor='zoom'>Zoom</label>
-          <input type='range' id='zoom' min='1' max='10' step='0.1' value={this.state.zoom} onChange={(e) => this.setZoom(e)} />
+          <input type='range' id='zoom' min='1' max='10' step='0.01' value={this.state.zoom} onChange={(e) => this.setZoom(e)} />
         </div>
         <div>
           <span>Crop Size:</span>
@@ -45,6 +46,10 @@ export default class App extends Component {
         <div>
           <label htmlFor='file'>Upload image:</label>
           <input type='file' id='file' onChange={(e) => this.onFileChange(e)} accept='image/*' />
+        </div>
+        <div style={{padding: '20px'}}>
+          <h3>Cropped Image</h3>
+          <img src={this.state.croppedImage} style={{maxWidth: '100%'}} />
         </div>
       </div>
     )
@@ -78,6 +83,12 @@ export default class App extends Component {
   loadImage(width, height) {
     this.setState({
       src: `http://placehold.it/${width}x${height}`
+    })
+  }
+
+  onCropDataChange(cropData) {
+    this.setState({
+      croppedImage: cropData.src
     })
   }
 }

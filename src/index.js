@@ -7,7 +7,8 @@ export default class ReactImageCropThing extends Component {
     src: PropTypes.string,
     zoom: PropTypes.string,
     cropAreaWidthRatio: PropTypes.number,
-    cropAreaHeightRatio: PropTypes.number
+    cropAreaHeightRatio: PropTypes.number,
+    onCropChange: PropTypes.func
   }
 
   constructor() {
@@ -16,6 +17,7 @@ export default class ReactImageCropThing extends Component {
     this.root = React.createRef()
     this.origImg = React.createRef()
     this.cropArea = React.createRef()
+    this.canvas = React.createRef()
 
     this.state = {
       top: 0,
@@ -45,13 +47,15 @@ export default class ReactImageCropThing extends Component {
         onMouseLeave={(e) => this.onMouseLeave(e)}
         onDrop={(e) => this.onDrop(e)}>
         {/* original image (hidden) */}
-        <img className={styles.origImg}
+        <img className={styles.displayNone}
           ref={this.origImg}
           src={this.props.src}
           onLoad={(e) => this.origImgOnLoad(e)}
           onLoadStart={(e) => this.origImgOnLoadStart(e)}
           onError={(e) => this.origImgOnError(e)}
           onProgress={(e) => this.origImgOnProgress(e)} />
+        {/* canvas to render cropped image */ }
+        <canvas className={styles.displayNone} ref={this.canvas} />
         {/* cropBox element */ }
         <div ref={this.cropArea} className={styles.cropArea} style={{
           width: this.state.cropAreaWidth,
@@ -148,6 +152,7 @@ export default class ReactImageCropThing extends Component {
 
   origImgOnError(e) {
     console.log('origImgOnError')
+    alert('error loading image!')
   }
 
   origImgOnLoadStart(e) {
@@ -268,6 +273,8 @@ export default class ReactImageCropThing extends Component {
       top: top,
       dragPrevX: e.clientX,
       dragPrevY: e.clientY
+    }, () => {
+      this.updateCrop()
     })
   }
 
@@ -323,12 +330,6 @@ export default class ReactImageCropThing extends Component {
     let height = 0
     let top = 0
     let left = 0
-
-    // center image horizontally
-    // left = -(width - this.state.cropAreaWidth) / 2
-
-    // center vertically
-    // top = -(height - this.state.cropAreaHeight) / 2
 
     if (imgWidth === imgHeight) {
       // image is a square
@@ -420,27 +421,70 @@ export default class ReactImageCropThing extends Component {
       height: height,
       top: top,
       left: left
+    }, () => {
+      this.updateCrop()
     })
   }
 
   zoomChanged(prevZoom) {
     console.log('zoomChanged from prevZoom to ' + this.props.zoom)
 
-    let prevWidth = this.state.width
-    let prevHeight = this.state.height
-    let prevTop = this.state.top
-    let prevLeft = this.state.left
-
-    let newWidth = prevWidth * (this.props.zoom / prevZoom)
-    let newHeight = prevHeight * (this.props.zoom / prevZoom)
-    let newTop = prevTop * (this.props.zoom / prevZoom)
-    let newLeft = prevLeft * (this.props.zoom / prevZoom)
+    let newWidth = this.state.width * (this.props.zoom / prevZoom)
+    let newHeight = this.state.height * (this.props.zoom / prevZoom)
+    let newTop = this.state.top * (this.props.zoom / prevZoom)
+    let newLeft = this.state.left * (this.props.zoom / prevZoom)
 
     this.setState({
       width: newWidth,
       height: newHeight,
       top: newTop,
       left: newLeft
+    }, () => {
+      this.updateCrop()
     })
+  }
+
+  updateCrop() {
+    // determine factor needed to scale image back to original size
+    let scaleFactor = this.origImg.current.width / this.state.width
+
+    console.log('scaleFactor ' + scaleFactor)
+
+    // multiply crop area by scale factor to find cropArea within original image
+    let cropWidth = this.state.cropAreaWidth * scaleFactor
+    let cropHeight = this.state.cropAreaHeight * scaleFactor
+    let cropOffsetX = Math.abs(this.state.left) * scaleFactor
+    let cropOffsetY = Math.abs(this.state.top) * scaleFactor
+
+    console.log(`cropWidth ${cropWidth} , cropHeight ${cropHeight}`)
+    console.log(`cropOffsetX ${cropOffsetX} , cropOffsetY ${cropOffsetY}`)
+
+    // size canvas to crop area for original image
+    this.canvas.current.width = cropWidth
+    this.canvas.current.height = cropHeight
+
+    let ctx = this.canvas.current.getContext('2d')
+
+    ctx.drawImage(this.origImg.current, cropOffsetX, cropOffsetY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight)
+
+    let cropImg = ''
+    try {
+      cropImg = this.canvas.current.toDataURL('image/jpeg')
+    } catch (err) {
+      console.log(err)
+    }
+
+    let cropData = {
+      src: cropImg
+    }
+    this.onCropChange(cropData)
+  }
+
+  onCropChange(cropData) {
+    if (!this.props.onCropChange) {
+      return
+    }
+
+    this.props.onCropChange(cropData)
   }
 }

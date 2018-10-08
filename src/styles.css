@@ -9,24 +9,8 @@
   text-align: center;
 }
 
-.fillWidth {
-  min-width: 100%;
-  height: auto;
-}
-
-.fillHeight {
-  min-height: 100%;
-  height: auto;
-}
-
-.origImg {
+.displayNone {
   display: none;
-}
-
-.controls {
-  z-index: 1;
-  margin: 0 auto;
-  width: 320px;
 }
 
 .cropArea {
@@ -54,4 +38,9 @@
   /* manipulate height, left, top, and width of this when zooming */
   position: absolute;
   cursor: move;
+}
+
+.circleMask {
+  background-color: darkgray;
+
 }
