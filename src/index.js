@@ -8,7 +8,9 @@ export default class ReactImageCropThing extends Component {
     zoom: PropTypes.string,
     cropAreaWidthRatio: PropTypes.number,
     cropAreaHeightRatio: PropTypes.number,
-    onCropChange: PropTypes.func
+    onCropChange: PropTypes.func,
+    showCircleMask: PropTypes.bool,
+    maskOpacity: PropTypes.number
   }
 
   constructor() {
@@ -40,6 +42,13 @@ export default class ReactImageCropThing extends Component {
   }
 
   render() {
+    let cropAreaBorderRadius = '0'
+    let cropAreaBackground = 'transparent'
+    if (this.props.showCircleMask) {
+      cropAreaBorderRadius = '100%'
+      cropAreaBackground = `radial-gradient(transparent ${this.state.cropAreaWidth / 2}px, rgba(0,0,0,${this.props.maskOpacity}) ${this.state.cropAreaWidth / 2}px)`
+    }
+
     return (
       <div className={styles.reactImageCropThing}
         ref={this.root}
@@ -63,7 +72,8 @@ export default class ReactImageCropThing extends Component {
         }}>
           <div className={styles.cropImageMasked} style={{
             width: this.state.cropAreaWidth,
-            height: this.state.cropAreaHeight
+            height: this.state.cropAreaHeight,
+            borderRadius: cropAreaBorderRadius
           }}>
             <img src={this.state.src2}
               draggable='false'
@@ -75,10 +85,13 @@ export default class ReactImageCropThing extends Component {
                 width: this.state.width,
                 height: this.state.height,
                 top: this.state.top,
-                left: this.state.left
+                left: this.state.left,
+                background: cropAreaBackground
               }} />
           </div>
-          <div className={styles.cropImageTransparent}>
+          <div className={styles.cropImageTransparent} style={{
+            opacity: this.props.maskOpacity
+          }}>
             <img src={this.state.src2}
               draggable='false'
               className={styles.cropImg}

@@ -12,8 +12,16 @@ export default class App extends Component {
       cropAreaWidthRatio: 200,
       cropAreaHeightRatio: 200,
       containerClassName: 'square',
-      croppedImage: ''
+      croppedImage: '',
+      showCircleMask: true,
+      maskOpacity: '0.3'
     }
+  }
+
+  maskOpacityChange(e) {
+    this.setState({
+      maskOpacity: e.target.value
+    })
   }
 
   render () {
@@ -25,6 +33,8 @@ export default class App extends Component {
           cropAreaWidthRatio={this.state.cropAreaWidthRatio}
           cropAreaHeightRatio={this.state.cropAreaHeightRatio}
           onCropChange={(cropData) => this.onCropDataChange(cropData)}
+          showCircleMask={this.state.showCircleMask}
+          maskOpacity={this.state.maskOpacity}
         />
 
         <div>
@@ -36,6 +46,12 @@ export default class App extends Component {
           <button onClick={(e) => this.setCropSize(200, 250)}>Legacy Photo</button>
           <button onClick={(e) => this.setCropSize(200, 200)}>Square</button>
           <button onClick={(e) => this.setCropSize(314, 112)}>Logo</button>
+        </div>
+        <div>
+          <span>Masking</span>
+          <button onClick={(e) => this.toggleCircleMask()}>Toggle Circle Mask</button>
+          <label>Mask Opacity</label>
+          <input type='range' id='maskOpacity' min='0' max='1' step='0.01' value={this.state.maskOpacity} onChange={(e) => this.maskOpacityChange(e)} />
         </div>
         <div>
           <span>Load placeholder image:</span>
@@ -89,6 +105,12 @@ export default class App extends Component {
   onCropDataChange(cropData) {
     this.setState({
       croppedImage: cropData.src
+    })
+  }
+
+  toggleCircleMask() {
+    this.setState({
+      showCircleMask: !this.state.showCircleMask
     })
   }
 }
