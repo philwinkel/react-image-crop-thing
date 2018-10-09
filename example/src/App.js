@@ -12,7 +12,7 @@ export default class App extends Component {
       cropAreaWidthRatio: 200,
       cropAreaHeightRatio: 200,
       croppedImage: '',
-      showCircleMask: false,
+      showCircleMask: true,
       maskOpacity: '0.3',
       maskColor: 'white',
       cropData: {
