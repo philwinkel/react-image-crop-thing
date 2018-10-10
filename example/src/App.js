@@ -42,8 +42,7 @@ export default class App extends Component {
           onCropChange={(cropData) => this.onCropDataChange(cropData)}
           showCircleMask={this.state.showCircleMask}
           maskOpacity={this.state.maskOpacity}
-          maskColor={this.state.maskColor}
-        />
+          maskColor={this.state.maskColor} />
         <div style={{marginBottom: '20px'}}>
           <span>Crop Size:</span>
           <button onClick={(e) => this.setCropSize(200, 250)}>Legacy Photo</button>
