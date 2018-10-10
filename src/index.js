@@ -1,6 +1,7 @@
 import React, {Component} from 'react'
 import PropTypes from 'prop-types'
 import styles from './styles.css'
+import { ResizeSensor } from 'css-element-queries'
 
 export default class ReactImageCropThing extends Component {
   static propTypes = {
@@ -82,6 +83,10 @@ export default class ReactImageCropThing extends Component {
               onMouseDown={(e) => this.onMouseDown(e)}
               onMouseMove={(e) => this.onMouseMove(e)}
               onMouseUp={(e) => this.onMouseUp(e)}
+              onTouchStart={(e) => this.onTouchStart(e)}
+              onTouchMove={(e) => this.onTouchMove(e)}
+              onTouchEnd={(e) => this.onTouchEnd(e)}
+              onTouchCancel={(e) => this.onTouchCancel(e)}
               className={styles.cropImg}
               style={{
                 width: this.state.width,
@@ -99,6 +104,10 @@ export default class ReactImageCropThing extends Component {
               onMouseDown={(e) => this.onMouseDown(e)}
               onMouseMove={(e) => this.onMouseMove(e)}
               onMouseUp={(e) => this.onMouseUp(e)}
+              onTouchStart={(e) => this.onTouchStart(e)}
+              onTouchMove={(e) => this.onTouchMove(e)}
+              onTouchEnd={(e) => this.onTouchEnd(e)}
+              onTouchCancel={(e) => this.onTouchCancel(e)}
               style={{
                 width: this.state.width,
                 height: this.state.height,
@@ -113,7 +122,11 @@ export default class ReactImageCropThing extends Component {
 
   componentDidMount() {
     window.addEventListener('resize', this.onResize.bind(this))
-    // this.scaleCropAreaToFit()
+
+    // resize sensor to detect resize of the component's root element, so it can scale the crop area fluidly
+    new ResizeSensor(this.root.current, () => {
+      this.scaleCropAreaToFit()
+    })
   }
 
   componentWillUnmount() {
@@ -126,6 +139,7 @@ export default class ReactImageCropThing extends Component {
       this.scaleCropAreaToFit()
     }
 
+    // when crop area dimensions change, reset the image
     if (this.props.cropAreaWidthRatio !== prevProps.cropAreaWidthRatio ||
       this.props.cropAreaHeightRatio !== prevProps.cropAreaHeightRatio) {
       this.scaleCropAreaToFit()
@@ -246,11 +260,7 @@ export default class ReactImageCropThing extends Component {
   }
 
   onMouseDown(e) {
-    this.setState({
-      dragging: true,
-      dragPrevX: e.clientX,
-      dragPrevY: e.clientY
-    })
+    this.startMoveCropImage(e.clientX, e.clientY)
   }
 
   onMouseMove(e) {
@@ -258,13 +268,27 @@ export default class ReactImageCropThing extends Component {
       return
     }
 
-    // this happens when the drag ends, clientX and clientY are 0... ignore that event
+    // this happens when the drag ends, clientX and clientY are 0... ignore that event, or the image jumps upon release
     if (e.clientX === 0 && e.clientY === 0) {
       return
     }
 
     let dX = e.clientX - this.state.dragPrevX
     let dY = e.clientY - this.state.dragPrevY
+
+    this.moveCropImage(dX, dY)
+  }
+
+  startMoveCropImage(x, y) {
+    this.setState({
+      dragging: true,
+      dragPrevX: x,
+      dragPrevY: y
+    })
+  }
+
+  moveCropImage(dX, dY) {
+    console.log(`moveCropImage ${dX} ${dY}`)
 
     let left = this.state.left + dX
     if (left > 0) {
@@ -285,8 +309,8 @@ export default class ReactImageCropThing extends Component {
     this.setState({
       left: left,
       top: top,
-      dragPrevX: e.clientX,
-      dragPrevY: e.clientY
+      dragPrevX: this.state.dragPrevX += dX,
+      dragPrevY: this.state.dragPrevY += dY
     }, () => {
       this.updateCrop()
     })
@@ -506,5 +530,55 @@ export default class ReactImageCropThing extends Component {
     }
 
     this.props.onCropChange(cropData)
+  }
+
+  onTouchStart(e) {
+    e.preventDefault()
+
+    console.log('onTouchStart')
+
+    let touches = e.changedTouches
+    for (let i = 0; i < touches.length; i++) {
+      console.log(`onTouchStart touch ${i} ${touches[i].pageX} ${touches[i].pageY}`)
+    }
+
+    this.startMoveCropImage(touches[0].pageX, touches[0].pageY)
+  }
+
+  onTouchMove(e) {
+    e.preventDefault()
+
+    console.log('onTouchMove')
+
+    let touches = e.changedTouches
+    for (let i = 0; i < touches.length; i++) {
+      console.log(`onTouchMove touch ${i} ${touches[i].pageX} ${touches[i].pageY}`)
+    }
+
+    let dX = touches[0].pageX - this.state.dragPrevX
+    let dY = touches[0].pageY - this.state.dragPrevY
+
+    this.moveCropImage(dX, dY)
+  }
+
+  onTouchEnd(e) {
+    e.preventDefault()
+
+    console.log('onTouchEnd')
+
+    let touches = e.changedTouches
+
+    let dX = touches[0].pageX - this.state.dragPrevX
+    let dY = touches[0].pageY - this.state.dragPrevY
+
+    this.moveCropImage(dX, dY)
+
+    this.setState({dragging: false})
+  }
+
+  onTouchCancel(e) {
+    console.log('onTouchCancel')
+
+    this.setState({dragging: false})
   }
 }
