@@ -469,12 +469,10 @@ export default class ReactImageCropThing extends Component {
 
     let newWidth = this.state.width * (this.props.zoom / prevZoom)
     let newHeight = this.state.height * (this.props.zoom / prevZoom)
-    // let newTop = this.state.top * (this.props.zoom / prevZoom)
-    // let newLeft = this.state.left * (this.props.zoom / prevZoom)
     let newTop = this.state.top + ((this.state.height - newHeight) / 2)
     let newLeft = this.state.left + ((this.state.width - newWidth) / 2)
 
-    // make sure image still fills the crop area. if not, adjust top/left so it does.
+    // make sure image fills the crop area. if not, adjust top/left so it does.
     let w = newWidth + newLeft
     if (w < this.state.cropAreaWidth) {
       newLeft += this.state.cropAreaWidth - w
